@@ -7,11 +7,11 @@ shinyUI(navbarPage(title = "CityBike",
   collapsible = TRUE,
   windowTitle <- 'CityBike',
 
-  tabPanel("About",
-    fluidRow(
-      column(6,offset = 3,
-        includeMarkdown("doc/about.md"))
-    )),  
+#   tabPanel("About",
+#     fluidRow(
+#       column(6,offset = 3,
+#         includeMarkdown("doc/about.md"))
+#     )),  
     tabPanel("Map",
              fluidRow(
                column(3,offset = 1,
