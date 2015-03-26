@@ -3,15 +3,13 @@ library(maps)
 library(lubridate)
 library(gbm)
 
-#load(paste0('data/', 'station'))
 station <- read.csv('data/station.csv')
 station <- apply(station, 2, as.numeric)
 station <- as.data.frame(station)
 load('data/monthFit')
-#load('data/march')
 
 ###########################################################################################################
-## helper function to create the data to predict
+## Create the data to predict
 #########################################################################################################
 get_bin.f <- function(df, date, hour, rng){
   newd <- data.frame(month = month(date), hour = as.numeric(hour), dayofweek = format(date, '%a'), min_block = rng)
@@ -34,7 +32,7 @@ get_all.f <- function(df, date, hour, rng, tm, len){
 }
 
 ##################################################################################
-# main function to get the data to plot
+# Main function to get the data to predict and the prediciton to plot
 #####################################################################################
 
 get_data.f <- function(df, date, hour, tm){
@@ -88,7 +86,6 @@ shinyServer(function(input, output, session) {
     
       stat0 <- stat[which(stat$p == 0),]
       add_circle.f(stat0, '#FC0000')
-
   })
   
 })
