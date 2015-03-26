@@ -7,78 +7,55 @@ library(gbm)
 station <- read.csv('data/station.csv')
 station <- apply(station, 2, as.numeric)
 station <- as.data.frame(station)
-#load('data/monthFit')
-load('data/march')
+load('data/monthFit')
+#load('data/march')
+
+###########################################################################################################
+## helper function to create the data to predict
+#########################################################################################################
+get_bin.f <- function(df, date, hour, rng){
+  newd <- data.frame(month = month(date), hour = as.numeric(hour), dayofweek = format(date, '%a'), min_block = rng)
+  newd$weekend <- ifelse(newd$dayofweek %in% c('Sat', 'Sun'), 1, 0)
+  newd$rush <- ifelse(newd$hour %in% c(7,8,9, 17, 18, 19) & newd$weekend == 0, 1, 0)
+  newd$night <- ifelse(newd$hour %in% c(21:23,0:6), 1, 0)
+  newd <- newd[,c(1:3,6:7,5,4)]
+  newdata <- data.frame(endid = df$id, newd)
+  return(newdata)
+}
+get_all.f <- function(df, date, hour, rng, tm, len){
+  s <- seq(tm[1], tm[2], 10)
+  l <- list()
+  for(i in 1:len){
+    r <- paste0('X', s[i], '.', s[i+1])
+    l[[i]] <- get_bin.f(df, date, hour, r)
+  }
+  df <- data.frame(do.call(rbind, l))
+  return(df)
+}
+
+##################################################################################
+# main function to get the data to plot
+#####################################################################################
+
+get_data.f <- function(df, date, hour, tm){
+  nbin <- (tm[2] - tm[1])/10
+  rng  <- paste0('X',tm[1], '.', tm[2])
+    if(nbin == 1){
+      newdf <- get_bin.f(df, date, hour, rng)
+    }else{
+      newdf <- get_all.f(df, date, hour, rng,tm, nbin)
+    }
+  mn <- as.numeric(month(date))
+  fit <- monthFit[[mn]]
+  p <- predict(fit, newdata = newdf, n.trees = 500, type = "response")
+  pred <- ifelse(p > .5, 1, 0)
+  res <- data.frame(station, p = pred)
+  return(res)
+}
+
 shinyServer(function(input, output, session) {
 
 
-  ##################################################################################
-  ## check the boundaries of the map and return the lat lon only of the point in the map
-  ####################################################################################
-  inBounds <- reactive({
-    #if (is.null(input$map_bounds))
-      #return(station[FALSE,])
-    bounds <- input$map_bounds
-    latRng <- range(bounds$north, bounds$south)
-    lngRng <- range(bounds$east, bounds$west)
-    
-    subset(station,
-          lat >= latRng[1] & lat <= latRng[2] &
-          lon >= lngRng[1] & lon <= lngRng[2])
-  })
-  
-  #########################################################################################
-  # input date and time and create dataframe to be tested with the gbmFit
-  #########################################################################################
-  get_bin.f <- function(x){
-    newd <- data.frame(month = month(input$date), hour = as.numeric(input$hour), dayofweek = format(input$date, '%a'), min_block = x)
-    newd$weekend <- ifelse(newd$dayofweek %in% c('Sat', 'Sun'), 1, 0)
-    newd$rush <- ifelse(newd$hour %in% c(7,8,9, 17, 18, 19) & newd$weekend == 0, 1, 0)
-    newd$night <- ifelse(newd$hour %in% c(21:23,0:6), 1, 0)
-    newd <- newd[,c(1:3,6:7,5,4)]
-    newdata <- data.frame(endid = inBounds()$id, newd)
-    return(newdata)
-  }
-  get_all.f <- function(x, len){
-      s <- seq(input$time[1], input$time[2], 10)
-      l <- list()
-    for(i in 1:len){
-      r <- paste0('X', s[i], '.', s[i+1])
-      l[[i]] <- get_bin.f(r)
-    }
-    df <- data.frame(do.call(rbind, l))
-    return(df)
-  }
-  
-  nbin <- reactive({nbin <- (input$time[2] - input$time[1])/10})
-  rng <- reactive({rng <- paste0('X',input$time[1], '.', input$time[2])})
-  newdf <- reactive({
-    if(nbin() == 1){
-    newdf <- get_bin.f(rng())
-  }else{
-    newdf <- get_all.f(rng(), nbin())
-  }
-})
-
-  ##################################################################################
-  # get the prediction
-  #####################################################################################
-
-  pred <- reactive({
-    fit <- march#monthFit[[newdf()$month[1]]]
-    p <- predict(fit, newdata = newdf(), n.trees = 500, type = "response")
-    pred <- ifelse(p > .5, 1, 0)
-  })
-
-  inBoundsPred <- reactive({
-     data.frame(inBounds(), p = pred())
-  })
-# output$data <- renderTable({
-#   newdf()
-# })
-# output$data <- renderText({
-#   pred()
-# })
   ####################################################################################
   ## create map
   #####################################################################################
@@ -101,7 +78,7 @@ shinyServer(function(input, output, session) {
 
   observe({
     map$clearShapes()
-    stat <- inBoundsPred()
+    stat <- get_data.f(station, input$date, input$hour, input$time)
     
     if (nrow(stat) == 0)
       return()
