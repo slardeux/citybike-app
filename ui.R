@@ -3,9 +3,9 @@ library(leaflet)
 library(ShinyDash)
 library(markdown)
 
-shinyUI(navbarPage(title = "City Bike NYC",
+shinyUI(navbarPage(title = "Bike Share NYC",
   collapsible = TRUE,
-  windowTitle <- 'CityBike',
+  windowTitle <- 'Bike Share NYC',
 
   tabPanel("About",
     fluidRow(
