@@ -6,11 +6,9 @@ output: html_document
 
 <style type = 'text/css'>
 body{
-  background:#AFFFF0;
+  background:#DAFFD9;
 }
-.r{
-  background:#90F5E2;
-}
+
 #imgleft img{
   float:left;
   margin-right: 2em;
@@ -36,15 +34,13 @@ options(warn=-1)
 </div>
 
 
-
-The best way to illustrate whether or not at least a bike would be in a given bike station in the New York city bike share system is through a shiny app. I took the GBM model created previously and imported it in this shiny app to predict whether or not a bike will be at a station at hte date and time inputed by the user. 
+The best way to illustrate whether or not at least one bike would be in a given bike station in the New York City bike share system is through a Shiny app. I took the GBM model I created earlier and imported it in this Shiny app to predict whether or not a bike would be at a station at the date and time inputted by the user.
 
 I used the leaflet-shiny package created by [Joe Cheng](https://github.com/jcheng5/leaflet-shiny/tree/master/) to create the map.
 
 <div id = 'space'></div>
 
-## Shiny app ui.R
-
+## Shiny App ui.R
 
 ```{r, eval=FALSE}
 library(shiny)
@@ -88,9 +84,9 @@ shinyUI(navbarPage(title = "City Bike NYC",
 )
 ```
 
-When the user select a date and time, the app get them and use the get\_data.f function to find the prediction. This function calls the get\_bin.f function and the get\_all.f function (in the case when more than 1 10 minute bin was selected). These function return a data set composed of all the bike station ID, the date and the time; this data set will be use for prediction.
+When the user selects a date and time, the app takes the information and uses the get\_data.f function to find the prediction. This function calls the get\_bin.f function and the get_all.f function (in the case when more than one 10-minute bin was selected). These functions return a data set composed of all the bike station ID’s, the date and the time; this data set will be used for prediction.
 
-The get\_data.f use the monthFit model obtained by running the gbm previously to predict the new data set. Finally, I created a map and added circle to each station location with a color green if the model predict that there is at least a bike and red if not.
+The get_data.f use the monthFit model obtained by running the gbm previously created to predict the new data set. Finally, I created a map and added green circles to each station location if the model predicts that there will be at least one bike, and red circles if not.
 
 ## Shiny app ui.R
 
@@ -188,7 +184,7 @@ shinyServer(function(input, output, session) {
 })
 ```
 
-The app has also an about page (a markdown document) to explain how to use it and where it came from. The user needs to first chose a date/time before any point are drawn on the map.
+The app also features an About page (a markdown document) to explain how to use it and where it came from. The user needs to first choose a date/time before any points are drawn on the map.
 
 <iframe src = 'https://slardeux.shinyapps.io/citybikeApp/' width = 900 height = 800 style = "border = none;"" seamless = 'seamless' frameborder = 'no' scrolling = 'no'></iframe>
 
